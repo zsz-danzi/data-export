@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <title>js导入excel</title>
+
+		<style>
+			.data-view {
+				width: 100%;
+				padding-top: 24px;
+			}
+			.data-view p {
+				height: 24px;
+				line-height: 24px;
+				font-size: 16px;
+				color: #333;
+				margin-bottom: 10px;
+				margin-top: 0;
+			}
+			.data-view span {
+				height: 24px;
+				line-height: 24px;
+				vertical-align: top;
+				margin-right: 4px;
+			}
+			.data-view p span.num {
+				margin: 0 4px;
+				padding: 0;
+			}
+			ul, li {
+				margin: 0;
+				padding: 0;
+				padding-inline-start: 0;
+			}
+			ul {
+				margin-top: -10px;
+			}
+			ul li span {
+				margin-left: 12px;
+			}
+			ul li span:first-child {
+				width: 220px;
+				display: inline-block;
+				vertical-align: top;
+				white-space: nowrap;
+				text-overflow: ellipsis;
+				overflow: hidden;
+			}
+			.type span {
+				margin-left: 12px;
+				margin-right: 4px;
+			}
+
+		</style>
+</head>
+
+<body>
+
+	<input type="file"onchange="importf(this)" />
+
+	<div id="excelContent"></div>
+
+
+
+	<!-- <div class="data-view">
+		<p><span>工单类型AlipayHk总量：</span>200</p>
+		<p>工单子类型如下：</p>
+		<ul>
+			<li><span>XXXX:</span><span>数量：</span>200<span>占比：</span>10.55%</li>
+		</ul>
+	</div> -->
+
+	<script src="xlsx.js"></script>
+
+	<script>
+		/**
+		 * FileReader共有4种读取方法：
+		 * 1.readAsArrayBuffer(file)：将文件读取为ArrayBuffer。
+		 * 2.readAsBinaryString(file)：将文件读取为二进制字符串
+		 * 3.readAsDataURL(file)：将文件读取为Data URL
+		 * 4.readAsText(file, [encoding])：将文件读取为文本，encoding缺省值为'UTF-8'
+		 */
+		var wb;//读取完成的数据
+		var rABS = false; //是否将文件读取为二进制字符
+
+
+		const findArrMore = (arr) => {
+			let dataMap = new Map();
+			let len = arr.length;
+			let twoId = [];
+			for (let i = 0; i < len; i++) {
+				if (!dataMap.has(arr[i])) {
+					dataMap.set(arr[i], true);
+				} else {
+					twoId.push(arr[i]);
+				}
+			}
+			twoId = [...new Set(twoId)];
+			return twoId;
+		}
+
+		//开始导入
+		function importf(obj) {
+			if(!obj.files) {
+				return;
+			}
+			var f = obj.files[0];
+			var reader = new FileReader();
+			reader.onload = function(e) {
+				var data = e.target.result;
+				if(rABS) {
+					wb = XLSX.read(btoa(fixdata(data)), {//手动转化
+						type: 'base64'
+					});
+				} else {
+					wb = XLSX.read(data, {
+						type: 'binary'
+					});
+				}
+
+				/**
+					* wb.SheetNames[0]是获取Sheets中第一个Sheet的名字
+					* wb.Sheets[Sheet名]获取第一个Sheet的数据
+					*/
+
+					// console.log('wb.SheetNames[0]: ', wb.SheetNames[0])
+					// console.log('wb.SheetNames[1]:DATA: ', wb.Sheets[wb.SheetNames[0]])
+
+					var dataAll = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+
+					// console.log('dataAll: ' + dataAll.length)
+
+
+					const alipayData = dataAll.filter(item => String(item['工单类型']).indexOf('AlipayHK') >= 0);
+
+					// console.log('alipayData: ' + alipayData.length)
+					let len = alipayData.length;
+					let dataType = [];
+
+					var dataTypeMap = new Map();
+
+					for (let i = 0; i < len; i++) {
+						if (dataType.indexOf(alipayData[i]['工单子类型']) < 0) {
+							dataType.push(alipayData[i]['工单子类型']);
+							dataTypeMap.set(alipayData[i]['工单子类型'], {
+								userId: [alipayData[i].user_id],
+								num: 1,
+								doneNum: alipayData[i]['是否完结'] === '完结' ? 1 : 0,
+								resubmitNum: Number(alipayData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1,
+							})
+						} else {
+							const sourceData = dataTypeMap.get(alipayData[i]['工单子类型']);
+							const doneNum = alipayData[i]['是否完结'] === '完结' ? 1 : 0;
+							const resubmitNum = Number(alipayData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1;
+							const userId = [...sourceData.userId, alipayData[i].user_id];
+
+							const data = {
+								userId: userId,
+								num: sourceData.num + 1,
+								doneNum: sourceData.doneNum + doneNum,
+								resubmitNum: sourceData.resubmitNum + resubmitNum,
+							}
+
+							dataTypeMap.set(alipayData[i]['工单子类型'], data);
+						}
+					}
+
+					// console.log('dataType', dataType)
+
+					let html = '';
+					let sumDoneNum = 0;
+					dataType.forEach((item,index) => {
+						const sourceData = dataTypeMap.get(item);
+						const bfb = (sourceData.num / len) * 100;
+						const bfbType = (sourceData.doneNum / sourceData.num) * 100;
+						sumDoneNum += sourceData.doneNum;
+
+						const twoId = findArrMore(sourceData.userId);
+						// console.log('twoId: ', twoId);
+
+
+						html+='<li><span>'+(String(index + 1) +'-' + item)+':</span><span>数量：</span>'+sourceData.num+'<span>已结单：</span>'+sourceData.doneNum+'<span>未结单：</span>'+(sourceData.num - sourceData.doneNum)+'\
+							<span>-72小时再次提交数量：</span>'+sourceData.resubmitNum+'\
+							<span>多次提交工单用户数量：</span>'+twoId.length+'<span>工单类型占比：</span>'+bfb.toFixed(2)+'%\
+							<span>工单结单率：</span>'+bfbType.toFixed(2)+'%</li>'
+					});
+
+
+					// console.log('sumDoneNum', sumDoneNum)
+
+					const sumBfbType = (sumDoneNum / alipayData.length) * 100;
+
+					// <span>已结单：<span>'+sumDoneNum+'<span>\
+
+					// 未结单：<span>'+alipayData.length - sumDoneNum+'<span>总结单率：<span>'+sumBfbType.toFixed(2)+'%
+
+					document.getElementById("excelContent").innerHTML= '<div class="data-view">\
+					<p><span>工单类型AlipayHk总量：</span>'+alipayData.length+'</p>\
+					<p class="type">工单子类型一共<span class="num">'+dataType.length+'</span>条如下：<span>已结单：</span>'+sumDoneNum+'<span>\
+						未结单：</span>'+(alipayData.length - sumDoneNum)+'<span>总结单率：</span>'+sumBfbType.toFixed(2)+'%</p>\
+					<ul>'+html+'\
+					</ul>\
+				</div>'
+			};
+
+			if(rABS) {
+				reader.readAsArrayBuffer(f);
+			} else {
+				reader.readAsBinaryString(f);
+			}
+		}
+
+		//文件流转BinaryString
+		function fixdata(data) {
+			var o = "",
+					l = 0,
+					w = 10240;
+			for(; l < data.byteLength / w; ++l) o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w, l * w + w)));
+			o += String.fromCharCode.apply(null, new Uint8Array(data.slice(l * w)));
+			return o;
+		}
+
+	</script>
+
+</body>
+
+</html>
