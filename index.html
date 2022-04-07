@@ -9,6 +9,9 @@
     <title>js导入excel</title>
 
 		<style>
+
+			.file span{ margin: 0 3px; color: blue;}
+			
 			.data-view {
 				width: 100%;
 				padding-top: 24px;
@@ -60,7 +63,9 @@
 
 <body>
 
-	<input type="file"onchange="importf(this)" />
+	<input type="file" onchange="importf(this)" />
+
+	<p class="file" id="file">目前的文件：</p>
 
 	<div id="excelContent"></div>
 
@@ -87,6 +92,7 @@
 		var wb;//读取完成的数据
 		var rABS = false; //是否将文件读取为二进制字符
 
+		let alipayData = [];
 
 		const findArrMore = (arr) => {
 			let dataMap = new Map();
@@ -110,6 +116,8 @@
 			}
 			var f = obj.files[0];
 			var reader = new FileReader();
+			document.getElementById("file").innerHTML = document.getElementById("file").innerHTML + '<span>'+obj.files[0].name+'<span>';
+
 			reader.onload = function(e) {
 				var data = e.target.result;
 				if(rABS) {
@@ -134,12 +142,12 @@
 
 					// console.log('dataAll: ' + dataAll.length)
 
-
-					const alipayData = dataAll.filter(item => String(item['工单类型']).indexOf('AlipayHK') >= 0);
+					alipayData = alipayData.concat(dataAll.filter(item => String(item['工单类型']).indexOf('AlipayHK') >= 0));
 
 					// console.log('alipayData: ' + alipayData.length)
 					let len = alipayData.length;
 					let dataType = [];
+
 
 					var dataTypeMap = new Map();
 
