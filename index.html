@@ -206,16 +206,20 @@
 					let monthArr = [];
 
 					for (let i = 0; i < len; i++) {
-						if (dataType.indexOf(alipayData[i]['工单子类型']) < 0) {
-							dataType.push(alipayData[i]['工单子类型']);
-							dataTypeMap.set(alipayData[i]['工单子类型'], {
+						let key = alipayData[i]['工单子类型'];
+						if (key == '') {
+							key = alipayData[i]['工单类型']
+						}
+						if (dataType.indexOf(key) < 0) {
+							dataType.push(key);
+							dataTypeMap.set(key, {
 								userId: [alipayData[i].user_id],
 								num: 1,
 								doneNum: alipayData[i]['是否完结'] === '完结' ? 1 : 0,
 								resubmitNum: Number(alipayData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1,
 							})
 						} else {
-							const sourceData = dataTypeMap.get(alipayData[i]['工单子类型']);
+							const sourceData = dataTypeMap.get(key);
 							const doneNum = alipayData[i]['是否完结'] === '完结' ? 1 : 0;
 							const resubmitNum = Number(alipayData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1;
 							const userId = [...sourceData.userId, alipayData[i].user_id];
@@ -227,11 +231,10 @@
 								resubmitNum: sourceData.resubmitNum + resubmitNum,
 							}
 
-							dataTypeMap.set(alipayData[i]['工单子类型'], data);
+							dataTypeMap.set(key, data);
 						}
 
 						let date = String(alipayData[i]['创建时间']).substr(0, 7);
-						let key = alipayData[i]['工单子类型'];
 
 						if (monthArr.indexOf(date) < 0) {
 							// 2021-01-01 00:01:20
