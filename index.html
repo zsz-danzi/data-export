@@ -367,21 +367,56 @@
 
 				// console.log(importKey, otherKey, dataType)
 
+				// console.log(export2Data)
+
+       let dataMe = [];
+
 				export1Data.forEach(item => {
 					otherKey.forEach(key => {
 						delete item[key]
 					})
 				})
-				export2Data.forEach(item => {
-					importKey.forEach(key => {
-						delete item[key]
-					})
-				})
+
+        let resultKey = ['月份', '认证信息修改', '证件占用', '密码重置', '解限申请', '注销账户', '修改手机号', '主站批量小号问题', 'AlipayHK服务台工单', '活动风险', '申请解约（仅限外包提交）', 'HK营销优惠未享受', '反洗钱制裁', '短信邮件发送需求', '欺诈类举报', '收钱码申请', '手机号码重置舆情风险', '当面付', '调账申请', '挂失', '充值未到账', '转错账户回呼', '解挂', '退款未到账', '登录风险解限', '认证加急', '线上外部商户支付', '国际服务工单AlipayHK-C类海外代扣工单', '密码重置舆情风险', '账户被盗举报', '提现未到账', 'FPS转错账户', '会员卡被盗', '非会员卡被盗', '提现退票原因', '物料申请', '汇款未到账', '撤销拒付', '账户信息修改', '解限申请跨境类', '淘宝支付未到账', '结账未到账', '取消认证', '淘宝支付优惠未享受', '苹果高风险舆情', '港陆通支付未到账', '要求清退', '无法签约', '反欺诈交易拦截解限', '清退申诉', '苹果回转', 'AlipayHK存款宝证件号复核', '非本人签约风险排查', '港陆通退款未到账', '银行转交AlipayHK回访', '商家优惠券问题', 'B追C', '花旗积分兑换', 'KYB审核加急', '欺诈风控冻结', '存款宝无法绑定AlipayHK', '二次放号', '汇款退票原因查询', 'gcash汇款未到账', '存款宝活动优惠未享受', '存款宝交易记录查询', 'EMQ汇款未到账', '港日通交易纠纷', '证件盗用', '证件盗用/误认证', '商户券优惠未享受', '平台券优惠未享受', '其他赔付申请（仅二线或高阶可提交）', 'MID换绑', '的士司机申请', '商戶申請', '国际服务工单-AlipayHK-C类自助修改手机号', '国际服务工单-AlipayHK-C类自助认证ID查询', '国际服务工单-AlipayHK-C类自助修改认证信息', '修改姓名', '地址', '修改其他', '出生日期', '国际服务工单-AlipayHK-C类自助修改密码', '職業', '修改國籍/地區', '的士司機申請', '已申請中級認證，狀態申請中', '国际服务工单AlipayHK-C类自助销户', '收钱码加急', '错码导致资损', '其他', '認證問題', '二次放号处理', '二次放号挂失', 'KYC回访', 'X陆通支付未到账', '優惠未享受', 'X陆通退款未到账', 
+        '港陆汇支付失败', '其他問題', '轉賬問題', 'EKYC解限申请', 'AlipayHK转交银行回访', "账户持有人死亡-申请注销",
+        "账户持有人死亡-仅查询余额",
+        "国际服务工单-AlipayHK-C类认证自助加急",
+        "国际服务工单-AlipayHK-C类认证自助加急",
+        "误认证",
+        "账户持有人死亡-资金调账",
+        "虚假证件注销",
+        "支付未到账",
+        "登陸密碼問題",
+        "支付密碼問題",
+        "升投转交（不配合转接）",
+        "国际服务工单-AlipayHK-C类二次放号自助工单",
+        "港陆通营销活动",
+        "虚假证件降级",
+        "SME商户回访",
+        "内部个案处理",
+      ]
+
+        let expprtDataL = []
+
+        export2Data.forEach(item => {
+          let data = {}
+          resultKey.forEach((key, index) => {
+            if (!item[key]) {
+              data[key] = '-';
+            } else {
+              data[key] = item[key]
+            }
+          })
+          expprtDataL.push(data);
+        })
+
+        console.log('expprtDataL', expprtDataL)
+
 
 				const sheet1 = XLSX.utils.json_to_sheet(export1Data);
   			XLSX.utils.book_append_sheet(wb, sheet1, 'sheet1');
 
-				const sheet2 = XLSX.utils.json_to_sheet(export2Data);
+				const sheet2 = XLSX.utils.json_to_sheet(expprtDataL);
 				XLSX.utils.book_append_sheet(wb, sheet2, 'sheet2');
 
 				const workbookBlob = workbook2blob(wb);
@@ -418,7 +453,7 @@
 				newobj = obj instanceof Array? []: {}               // 判断是数组还是对象
 				for(var i in obj) {
 					newobj[i] = copy(obj[i])                        // 判断下一级是否还是引用类型
-				} 
+				}
 			} else {
 				newobj = obj
 			}
