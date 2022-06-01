@@ -160,6 +160,8 @@
 			return twoId;
 		}
 
+		let name = '';
+
 		//开始导入
 		function importf(obj) {
 			if(!obj.files) {
@@ -168,6 +170,8 @@
 			var f = obj.files[0];
 			var reader = new FileReader();
 			document.getElementById("file").innerHTML = document.getElementById("file").innerHTML + '<span>'+obj.files[0].name+'<span>';
+			
+			name = obj.files[0].name;
 
 			reader.onload = function(e) {
 				var data = e.target.result;
@@ -234,7 +238,8 @@
 							dataTypeMap.set(key, data);
 						}
 
-						let date = String(alipayData[i]['创建时间']).substr(0, 7);
+						let toDate = new Date(String(alipayData[i]['创建时间'] || alipayData[i]['创建时间月']));
+						let date = toDate.getMonth() + 1 + '月';
 
 						if (monthArr.indexOf(date) < 0) {
 							// 2021-01-01 00:01:20
@@ -410,9 +415,6 @@
           expprtDataL.push(data);
         })
 
-        console.log('expprtDataL', expprtDataL)
-
-
 				const sheet1 = XLSX.utils.json_to_sheet(export1Data);
   			XLSX.utils.book_append_sheet(wb, sheet1, 'sheet1');
 
@@ -420,7 +422,7 @@
 				XLSX.utils.book_append_sheet(wb, sheet2, 'sheet2');
 
 				const workbookBlob = workbook2blob(wb);
-				openDownloadDialog(workbookBlob, '数据分析.xlsx');
+				openDownloadDialog(workbookBlob, name + '-分析.xlsx');
     }
 
 		 // 将workbook装化成blob对象
