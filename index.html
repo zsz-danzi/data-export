@@ -145,6 +145,8 @@
 		let exportData = [];
 		let dataType = [];
 
+		let MonthDays = new Map();
+
 		const findArrMore = (arr) => {
 			let dataMap = new Map();
 			let len = arr.length;
@@ -240,6 +242,20 @@
 
 						let toDate = new Date(String(alipayData[i]['创建时间'] || alipayData[i]['创建时间月']));
 						let date = toDate.getMonth() + 1 + '月';
+
+						if (!MonthDays.get(date)) {
+							let dateJson = {
+								start: toDate.getDate(),
+								end: toDate.getDate(),
+							}
+							MonthDays.set(date, dateJson)
+						} else {
+							let dateJson = MonthDays.get(date);
+							MonthDays.set(date, {
+								...dateJson,
+								end: toDate.getDate(),
+							})
+						}
 
 						if (monthArr.indexOf(date) < 0) {
 							// 2021-01-01 00:01:20
@@ -414,6 +430,18 @@
           })
           expprtDataL.push(data);
         })
+
+				export1Data.forEach(item => {
+					let month = item['月份'];
+					let mm = MonthDays.get(month);
+					item['月份'] = month + ' ' + mm.start + '~' + mm.end
+				})
+
+				expprtDataL.forEach(item => {
+					let month = item['月份'];
+					let mm = MonthDays.get(month);
+					item['月份'] = month + ' ' + mm.start + '~' + mm.end
+				})
 
 				const sheet1 = XLSX.utils.json_to_sheet(export1Data);
   			XLSX.utils.book_append_sheet(wb, sheet1, 'sheet1');
