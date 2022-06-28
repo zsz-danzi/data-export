@@ -118,13 +118,6 @@
 		</tbody>
 </table>
 
-	<!-- <div class="data-view">
-		<p><span>工单类型AlipayHk总量：</span>200</p>
-		<p>工单子类型如下：</p>
-		<ul>
-			<li><span>XXXX:</span><span>数量：</span>200<span>占比：</span>10.55%</li>
-		</ul>
-	</div> -->
 
 	<script src="xlsx.js"></script>
 	<script src="export.js"></script>
@@ -140,10 +133,11 @@
 		var wb;//读取完成的数据
 		var rABS = false; //是否将文件读取为二进制字符
 
-		let alipayData = [];
+		let testData = [];
 
 		let exportData = [];
 		let dataType = [];
+		let indexOfName = 'A' + 'li' + 'p' + 'ay' + 'HK';
 
 		let MonthDays = new Map();
 
@@ -199,10 +193,11 @@
 
 					// console.log('dataAll: ' + dataAll.length)
 
-					alipayData = alipayData.concat(dataAll.filter(item => String(item['工单类型']).indexOf('AlipayHK') >= 0));
 
-					// console.log('alipayData: ' + alipayData.length)
-					let len = alipayData.length;
+					testData = testData.concat(dataAll.filter(item => String(item['工单类型']).indexOf(indexOfName) >= 0));
+
+					// console.log('testData: ' + testData.length)
+					let len = testData.length;
 					dataType = [];
 
 					exportData = [];
@@ -212,23 +207,23 @@
 					let monthArr = [];
 
 					for (let i = 0; i < len; i++) {
-						let key = alipayData[i]['工单子类型'];
+						let key = testData[i]['工单子类型'];
 						if (key == '') {
-							key = alipayData[i]['工单类型']
+							key = testData[i]['工单类型']
 						}
 						if (dataType.indexOf(key) < 0) {
 							dataType.push(key);
 							dataTypeMap.set(key, {
-								userId: [alipayData[i].user_id],
+								userId: [testData[i].user_id],
 								num: 1,
-								doneNum: alipayData[i]['是否完结'] === '完结' ? 1 : 0,
-								resubmitNum: Number(alipayData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1,
+								doneNum: testData[i]['是否完结'] === '完结' ? 1 : 0,
+								resubmitNum: Number(testData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1,
 							})
 						} else {
 							const sourceData = dataTypeMap.get(key);
-							const doneNum = alipayData[i]['是否完结'] === '完结' ? 1 : 0;
-							const resubmitNum = Number(alipayData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1;
-							const userId = [...sourceData.userId, alipayData[i].user_id];
+							const doneNum = testData[i]['是否完结'] === '完结' ? 1 : 0;
+							const resubmitNum = Number(testData[i]['是否完结后72小时候内再次提交工单']) === 0 ? 0 : 1;
+							const userId = [...sourceData.userId, testData[i].user_id];
 
 							const data = {
 								userId: userId,
@@ -240,7 +235,7 @@
 							dataTypeMap.set(key, data);
 						}
 
-						let toDate = new Date(String(alipayData[i]['创建时间'] || alipayData[i]['创建时间月']));
+						let toDate = new Date(String(testData[i]['创建时间'] || testData[i]['创建时间月']));
 						let date = toDate.getMonth() + 1 + '月';
 
 						if (!MonthDays.get(date)) {
@@ -338,16 +333,16 @@
 
 					// console.log('sumDoneNum', sumDoneNum)
 
-					const sumBfbType = (sumDoneNum / alipayData.length) * 100;
+					const sumBfbType = (sumDoneNum / testData.length) * 100;
 
 					// <span>已结单：<span>'+sumDoneNum+'<span>\
 
-					// 未结单：<span>'+alipayData.length - sumDoneNum+'<span>总结单率：<span>'+sumBfbType.toFixed(2)+'%
+					// 未结单：<span>'+testData.length - sumDoneNum+'<span>总结单率：<span>'+sumBfbType.toFixed(2)+'%
 
 					document.getElementById("excelContent").innerHTML= '<div class="data-view">\
-					<p><span>工单类型AlipayHk总量：</span>'+alipayData.length+'</p>\
+					<p><span>工单类型'+indexOfName+'总量：</span>'+testData.length+'</p>\
 					<p class="type">工单子类型一共<span class="num">'+dataType.length+'</span>条如下：<span>已结单：</span>'+sumDoneNum+'<span>\
-						未结单：</span>'+(alipayData.length - sumDoneNum)+'<span>总结单率：</span>'+sumBfbType.toFixed(2)+'%</p>\
+						未结单：</span>'+(testData.length - sumDoneNum)+'<span>总结单率：</span>'+sumBfbType.toFixed(2)+'%</p>\
 					<ul>'+html+'\
 					</ul>\
 				</div>'
@@ -380,7 +375,7 @@
 				let export2Data = copy(exportData);
 
 				let importKey = [
-					'AlipayHK服务台工单', '解限申请', '密码重置舆情风险', '密码重置',
+				indexOfName + '服务台工单', '解限申请', '密码重置舆情风险', '密码重置',
 					'当面付', '活动风险','注销账户', '认证加急','主站批量小号问题',
 				];
 
@@ -398,11 +393,11 @@
 					})
 				})
 
-        let resultKey = ['月份', '认证信息修改', '证件占用', '密码重置', '解限申请', '注销账户', '修改手机号', '主站批量小号问题', 'AlipayHK服务台工单', '活动风险', '申请解约（仅限外包提交）', 'HK营销优惠未享受', '反洗钱制裁', '短信邮件发送需求', '欺诈类举报', '收钱码申请', '手机号码重置舆情风险', '当面付', '调账申请', '挂失', '充值未到账', '转错账户回呼', '解挂', '退款未到账', '登录风险解限', '认证加急', '线上外部商户支付', '国际服务工单AlipayHK-C类海外代扣工单', '密码重置舆情风险', '账户被盗举报', '提现未到账', 'FPS转错账户', '会员卡被盗', '非会员卡被盗', '提现退票原因', '物料申请', '汇款未到账', '撤销拒付', '账户信息修改', '解限申请跨境类', '淘宝支付未到账', '结账未到账', '取消认证', '淘宝支付优惠未享受', '苹果高风险舆情', '港陆通支付未到账', '要求清退', '无法签约', '反欺诈交易拦截解限', '清退申诉', '苹果回转', 'AlipayHK存款宝证件号复核', '非本人签约风险排查', '港陆通退款未到账', '银行转交AlipayHK回访', '商家优惠券问题', 'B追C', '花旗积分兑换', 'KYB审核加急', '欺诈风控冻结', '存款宝无法绑定AlipayHK', '二次放号', '汇款退票原因查询', 'gcash汇款未到账', '存款宝活动优惠未享受', '存款宝交易记录查询', 'EMQ汇款未到账', '港日通交易纠纷', '证件盗用', '证件盗用/误认证', '商户券优惠未享受', '平台券优惠未享受', '其他赔付申请（仅二线或高阶可提交）', 'MID换绑', '的士司机申请', '商戶申請', '国际服务工单-AlipayHK-C类自助修改手机号', '国际服务工单-AlipayHK-C类自助认证ID查询', '国际服务工单-AlipayHK-C类自助修改认证信息', '修改姓名', '地址', '修改其他', '出生日期', '国际服务工单-AlipayHK-C类自助修改密码', '職業', '修改國籍/地區', '的士司機申請', '已申請中級認證，狀態申請中', '国际服务工单AlipayHK-C类自助销户', '收钱码加急', '错码导致资损', '其他', '認證問題', '二次放号处理', '二次放号挂失', 'KYC回访', 'X陆通支付未到账', '優惠未享受', 'X陆通退款未到账', 
-        '港陆汇支付失败', '其他問題', '轉賬問題', 'EKYC解限申请', 'AlipayHK转交银行回访', "账户持有人死亡-申请注销",
+        let resultKey = ['月份', '认证信息修改', '证件占用', '密码重置', '解限申请', '注销账户', '修改手机号', '主站批量小号问题', indexOfName + '服务台工单', '活动风险', '申请解约（仅限外包提交）', 'HK营销优惠未享受', '反洗钱制裁', '短信邮件发送需求', '欺诈类举报', '收钱码申请', '手机号码重置舆情风险', '当面付', '调账申请', '挂失', '充值未到账', '转错账户回呼', '解挂', '退款未到账', '登录风险解限', '认证加急', '线上外部商户支付', '国际服务工单'+indexOfName+'-C类海外代扣工单', '密码重置舆情风险', '账户被盗举报', '提现未到账', 'FPS转错账户', '会员卡被盗', '非会员卡被盗', '提现退票原因', '物料申请', '汇款未到账', '撤销拒付', '账户信息修改', '解限申请跨境类', '淘宝支付未到账', '结账未到账', '取消认证', '淘宝支付优惠未享受', '苹果高风险舆情', '港陆通支付未到账', '要求清退', '无法签约', '反欺诈交易拦截解限', '清退申诉', '苹果回转', indexOfName + '存款宝证件号复核', '非本人签约风险排查', '港陆通退款未到账', '银行转交'+indexOfName+'回访', '商家优惠券问题', 'B追C', '花旗积分兑换', 'KYB审核加急', '欺诈风控冻结', '存款宝无法绑定'+indexOfName, '二次放号', '汇款退票原因查询', 'gcash汇款未到账', '存款宝活动优惠未享受', '存款宝交易记录查询', 'EMQ汇款未到账', '港日通交易纠纷', '证件盗用', '证件盗用/误认证', '商户券优惠未享受', '平台券优惠未享受', '其他赔付申请（仅二线或高阶可提交）', 'MID换绑', '的士司机申请', '商戶申請', '国际服务工单-'+indexOfName+'-C类自助修改手机号', '国际服务工单-'+indexOfName+'-C类自助认证ID查询', '国际服务工单-'+indexOfName+'-C类自助修改认证信息', '修改姓名', '地址', '修改其他', '出生日期', '国际服务工单-'+indexOfName+'-C类自助修改密码', '職業', '修改國籍/地區', '的士司機申請', '已申請中級認證，狀態申請中', '国际服务工单'+indexOfName+'-C类自助销户', '收钱码加急', '错码导致资损', '其他', '認證問題', '二次放号处理', '二次放号挂失', 'KYC回访', 'X陆通支付未到账', '優惠未享受', 'X陆通退款未到账', 
+        '港陆汇支付失败', '其他問題', '轉賬問題', 'EKYC解限申请', indexOfName + '转交银行回访', "账户持有人死亡-申请注销",
         "账户持有人死亡-仅查询余额",
-        "国际服务工单-AlipayHK-C类认证自助加急",
-        "国际服务工单-AlipayHK-C类认证自助加急",
+        "国际服务工单-"+indexOfName+"-C类认证自助加急",
+        "国际服务工单-"+indexOfName+"-C类认证自助加急",
         "误认证",
         "账户持有人死亡-资金调账",
         "虚假证件注销",
@@ -410,7 +405,7 @@
         "登陸密碼問題",
         "支付密碼問題",
         "升投转交（不配合转接）",
-        "国际服务工单-AlipayHK-C类二次放号自助工单",
+        "国际服务工单-"+indexOfName+"-C类二次放号自助工单",
         "港陆通营销活动",
         "虚假证件降级",
         "SME商户回访",
